@@ -1,68 +1,75 @@
-use super::types;
-use num::traits::{CheckedAdd, CheckedSub, Zero};
+// use super::types;
+use num::traits::{One, Zero};
 use std::collections::BTreeMap;
-use std::ops::Add;
+use std::ops::AddAssign;
 
 /// This is the System Pallet.
 /// It handles low level state needed for your blockchain.
 
+pub trait Config {
+    type AccountId: Ord + Clone;
+    type BlockNumber: Zero + One + AddAssign + Copy;
+    type Nonce: Zero + One + Copy + AddAssign;
+    // and more if needed
+}
 #[derive(Debug)]
 ///
-pub struct Pallet<BlockNumber, AccountId, Nonce> {
+pub struct Pallet<T: Config> {
     /// The current block number.
-    block_number: BlockNumber,
+    block_number: T::BlockNumber,
 
     /// A map from an account to their nonce.
-    nonce: BTreeMap<AccountId, Nonce>,
+    nonce: BTreeMap<T::AccountId, T::Nonce>,
 }
 
-impl<BlockNumber, AccountId, Nonce> Pallet<BlockNumber, AccountId, Nonce>
-where
-    BlockNumber: Zero + CheckedSub + CheckedAdd + Copy + From<u32>,
-    AccountId: Ord + Clone,
-    Nonce: Zero + CheckedSub + CheckedAdd + Copy + From<u32> + Add<Output = Nonce>,
-{
+impl<T: Config> Pallet<T> {
     /// Create a new instance of the System Pallet.
     pub fn new() -> Self {
         Self {
-            block_number: BlockNumber::zero(),
-            nonce: BTreeMap::<AccountId, Nonce>::new(),
+            block_number: T::BlockNumber::zero(),
+            nonce: BTreeMap::<T::AccountId, T::Nonce>::new(),
         }
     }
 
     /// Get the current block number.
-    pub fn block_number(&self) -> BlockNumber {
+    pub fn block_number(&self) -> T::BlockNumber {
         /* Return the current block number. */
         self.block_number
     }
 
-    pub fn get_nonce(&self, who: &AccountId) -> Nonce {
+    pub fn get_nonce(&self, who: &T::AccountId) -> T::Nonce {
         /* Return the current block number. */
-        *self.nonce.get(who).unwrap_or(&Nonce::zero())
+        *self.nonce.get(who).unwrap_or(&T::Nonce::zero())
     }
 
     // This function can be used to increment the block number.
     // Increases the block number by one.
     pub fn inc_block_number(&mut self) {
         /* Increment the current block number by one. */
-        self.block_number = self.block_number.checked_add(&1.into()).unwrap();
+        self.block_number = self.block_number + One::one();
 
         // BlockNumber::checked_add(self.block_number, &1.into());
     }
 
     // Increment the nonce of an account. This helps us keep track of how many transactions each
     // account has made.
-    pub fn inc_nonce(&mut self, who: &AccountId) {
+    pub fn inc_nonce(&mut self, who: &T::AccountId) {
         /* TODO: Get the current nonce of `who`, and increment it by one. */
-        let zero = Nonce::zero();
+        let zero = T::Nonce::zero();
         let old = self.nonce.get(who).unwrap_or(&zero);
-        self.nonce.insert(who.clone(), old.add(1.into()));
+        self.nonce.insert(who.clone(), *old + One::one());
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
+    struct testConfig;
+    impl Config for testConfig {
+        type AccountId = String;
+        type BlockNumber = u32;
+        type Nonce = u32;
+    }
 
     #[test]
     fn init_system() {
@@ -72,8 +79,8 @@ mod test {
             - Check the block number is what we expect.
             - Check the nonce of `alice` is what we expect.
         */
-
-        let mut system = Pallet::<types::BlockNumber, types::AccountId, types::Nonce>::new();
+        // let testConfig = Config{AccountId, BlockNumber, Nonce};
+        let mut system = Pallet::<testConfig>::new();
         system.inc_block_number();
         system.inc_nonce(&"Alice".to_string());
         system.inc_nonce(&"Alice".to_string());

@@ -1,44 +1,44 @@
-use super::types;
-use num::traits::{CheckedAdd, CheckedSub, Zero};
+use num::traits::{CheckedAdd, CheckedSub, One, Zero};
+use std::ops::AddAssign;
 use std::{collections::BTreeMap, fmt::Debug};
+
+pub trait Config {
+    type AccountId: Ord + Clone;
+    type Balance: Zero + One + AddAssign + Copy + CheckedSub + CheckedAdd;
+    // and more if needed
+}
 
 #[derive(Debug)]
 
-pub struct Pallet<AccountId, Balance> {
-    balances: BTreeMap<AccountId, Balance>,
+pub struct Pallet<T: Config> {
+    balances: BTreeMap<T::AccountId, T::Balance>,
 }
 
-impl<AccountId, Balance> Pallet<AccountId, Balance>
-where
-    AccountId: Ord + Clone,
-    Balance: Zero + CheckedSub + CheckedAdd + Copy + Debug,
-{
+impl<T: Config> Pallet<T> {
     pub fn new() -> Self {
         Self {
-            balances: BTreeMap::<AccountId, Balance>::new(),
+            balances: BTreeMap::<T::AccountId, T::Balance>::new(),
         }
     }
 
-    pub fn set_balance(&mut self, who: &AccountId, amount: Balance) {
+    pub fn set_balance(&mut self, who: &T::AccountId, amount: T::Balance) {
         self.balances.insert(who.clone(), amount);
     }
 
-    pub fn balance(&self, who: &AccountId) -> Balance {
-        *self.balances.get(who).unwrap_or(&Balance::zero())
+    pub fn balance(&self, who: &T::AccountId) -> T::Balance {
+        *self.balances.get(who).unwrap_or(&T::Balance::zero())
     }
 
     pub fn transfer(
         &mut self,
-        caller: &AccountId,
-        to: &AccountId,
-        amount: Balance,
+        caller: &T::AccountId,
+        to: &T::AccountId,
+        amount: T::Balance,
     ) -> Result<(), &'static str> {
         let caller_bal = self.balance(caller);
         let to_bal = self.balance(to);
-        println!("balance before {:?}", caller_bal);
 
         let new_caller_bal = caller_bal.checked_sub(&amount).ok_or("Not enough funds.")?;
-        println!("balance before {:?}", new_caller_bal);
 
         let new_to_bal = to_bal
             .checked_add(&amount)
@@ -55,9 +55,15 @@ where
 mod test {
     use super::*;
 
+    struct testConfig;
+    impl Config for testConfig {
+        type AccountId = String;
+        type Balance = u32;
+    }
+
     #[test]
     fn init_balances() {
-        let mut balances = Pallet::<types::AccountId, types::Balance>::new();
+        let mut balances = Pallet::<testConfig>::new();
         assert_eq!(balances.balance(&"alice".to_string()), 0);
         balances.set_balance(&"alice".to_string(), 100);
         assert_eq!(balances.balance(&"alice".to_string()), 100);
@@ -66,7 +72,7 @@ mod test {
 
     #[test]
     fn transfer_balance() {
-        let mut transfer = Pallet::<types::AccountId, types::Balance>::new();
+        let mut transfer = Pallet::<testConfig>::new();
 
         // - That `alice` cannot transfer funds she does not have.
         let result = transfer.transfer(&"Alice".to_string(), &"Bob".to_string(), 100);

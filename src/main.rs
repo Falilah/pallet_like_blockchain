@@ -1,24 +1,25 @@
-use types::BlockNumber;
-
 mod balances;
 mod system;
 
-mod types {
-    pub type AccountId = String;
-    pub type Balance = u128;
-    pub type Nonce = u32;
-    pub type BlockNumber = u32;
+impl system::Config for Runtime {
+    type AccountId = String;
+    type BlockNumber = u32;
+    type Nonce = u32;
 }
 
+impl balances::Config for Runtime {
+    type AccountId = String;
+    type Balance = u32;
+}
 // This is our main Runtime.
 // It accumulates all of the different pallets we want to use.
 #[derive(Debug)]
 pub struct Runtime {
     /* create a field `system` which is of type `system::Pallet`. */
-    system: system::Pallet<types::BlockNumber, types::AccountId, types::Nonce>,
+    system: system::Pallet<Self>,
 
     /* create a field `balances` which is of type `balances::Pallet`. */
-    balances: balances::Pallet<types::AccountId, types::Balance>,
+    balances: balances::Pallet<Self>,
 }
 
 impl Runtime {
@@ -75,6 +76,6 @@ fn main() {
     println!("{:?}", runtime)
 }
 
-mod test {
-    use super::*;
-}
+// mod test {
+//     use super::*;
+// }
