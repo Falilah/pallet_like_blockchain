@@ -2,8 +2,7 @@ use num::traits::{CheckedAdd, CheckedSub, One, Zero};
 use std::ops::AddAssign;
 use std::{collections::BTreeMap, fmt::Debug};
 
-pub trait Config {
-    type AccountId: Ord + Clone;
+pub trait Config: crate::system::Config {
     type Balance: Zero + One + AddAssign + Copy + CheckedSub + CheckedAdd;
     // and more if needed
 }
@@ -56,8 +55,12 @@ mod test {
     use super::*;
 
     struct testConfig;
-    impl Config for testConfig {
+    impl crate::system::Config for testConfig {
         type AccountId = String;
+        type BlockNumber = u32;
+        type Nonce = u32;
+    }
+    impl Config for testConfig {
         type Balance = u32;
     }
 
