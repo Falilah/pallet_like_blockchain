@@ -1,6 +1,26 @@
 mod balances;
-mod system;
 mod support;
+mod system;
+mod types {
+    use crate::support;
+
+    pub type AccountId = String;
+    pub type Balance = u128;
+    pub type BlockNumber = u32;
+    pub type Nonce = u32;
+    /*Define a concrete `Extrinsic` type using `AccountId` and `RuntimeCall`. */
+    pub type Extrinsic = support::Extrinsic<AccountId, crate::RuntimeCall>;
+    /*Define a concrete `Header` type using `BlockNumber`. */
+    pub type Header = support::Header<BlockNumber>;
+    /* Define a concrete `Block` type using `Header` and `Extrinsic`. */
+    pub type Block = support::Block<Header, Extrinsic>;
+}
+
+// These are all the calls which are exposed to the world.
+// Note that it is just an accumulation of the calls exposed by each module.
+pub enum RuntimeCall {
+    // TODO: Not implemented yet.
+}
 
 impl system::Config for Runtime {
     type AccountId = String;
