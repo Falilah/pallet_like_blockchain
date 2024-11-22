@@ -2,6 +2,8 @@ mod balances;
 mod support;
 mod system;
 
+use balances::Call;
+
 use crate::support::Dispatch;
 mod types {
     use crate::support;
@@ -21,7 +23,7 @@ mod types {
 // These are all the calls which are exposed to the world.
 // Note that it is just an accumulation of the calls exposed by each module.
 pub enum RuntimeCall {
-    BalancesTransfer { to: types::AccountId, amount: types::Balance },
+    Balances(balances::Call<Runtime>),
 
 }
 
@@ -48,8 +50,8 @@ impl crate::support::Dispatch for Runtime {
         runtime_call: Self::Call,
     ) -> support::DispatchResult {
         match runtime_call {
-            RuntimeCall::BalancesTransfer { to, amount } => {
-                self.balances.transfer(&caller, &to, amount)?;
+            RuntimeCall::Balances(call) =>{
+                self.balances.dispatch(caller, call)?;
             }
         }
         Ok(())
@@ -113,25 +115,36 @@ fn main() {
         extrinsics: vec![
             support::Extrinsic {
                 caller: alice,
-                call: RuntimeCall::BalancesTransfer { to: bob, amount: 69 },
+                call: RuntimeCall::BalancesTransfer {
+                    to: bob,
+                    amount: 69,
+                },
             },
             support::Extrinsic {
                 caller: "Bob".to_string(),
-                call: RuntimeCall::BalancesTransfer { to: "Charlie".to_string(), amount: 30 },
+                call: RuntimeCall::BalancesTransfer {
+                    to: "Charlie".to_string(),
+                    amount: 30,
+                },
             },
             support::Extrinsic {
                 caller: "alex".to_string(),
-                call: RuntimeCall::BalancesTransfer { to: "Charlie".to_string(), amount: 30 },
+                call: RuntimeCall::BalancesTransfer {
+                    to: "Charlie".to_string(),
+                    amount: 30,
+                },
             },
             support::Extrinsic {
                 caller: "Alice".to_string(),
-                call: RuntimeCall::BalancesTransfer { to: "alex".to_string(), amount: 10 },
+                call: RuntimeCall::BalancesTransfer {
+                    to: "alex".to_string(),
+                    amount: 10,
+                },
             },
         ],
     };
 
     runtime.execute_block(block_1).expect("invalid block");
-
 
     // start emulating a block
     /* Increment the block number in system. */
@@ -148,7 +161,6 @@ fn main() {
     //       the error if there is one.
     //     - We should capture the result of the transfer in an unused variable like `_res`.
     // */
-
     // let _res = runtime
     //     .balances
     //     .transfer(alice, bob, 30)
@@ -161,9 +173,7 @@ fn main() {
     // let _res = runtime
     //     .balances
     //     .transfer(alice, charlie, 20)
-        // .map_err(|e| eprintln!("{}", e));
-
-        
+    // .map_err(|e| eprintln!("{}", e));
 
     println!("{:?}", runtime)
 }

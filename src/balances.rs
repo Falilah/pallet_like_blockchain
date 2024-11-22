@@ -13,6 +13,36 @@ pub struct Pallet<T: Config> {
     balances: BTreeMap<T::AccountId, T::Balance>,
 }
 
+pub enum Call<T: Config> {
+    /* Create an enum variant `Transfer` which contains named fields:
+        - `to`: a `T::AccountId`
+        - `amount`: a `T::Balance`
+    */
+    Transfer {
+        to: T::AccountId,
+        amount: T::Balance,
+    },
+}
+
+impl<T: Config> crate::support::Dispatch for Pallet<T> {
+    type Caller = T::AccountId;
+    type Call = Call<T>;
+
+    fn dispatch(
+        &mut self,
+        caller: Self::Caller,
+        call: Self::Call,
+    ) -> crate::support::DispatchResult {
+        /* TODO: use a `match` statement to route the `Call` to the appropriate pallet function. */
+        match call {
+            Call::Transfer { to, amount } => {
+                self.transfer(&caller, &to, amount)?;
+            }
+        }
+        Ok(())
+    }
+}
+
 impl<T: Config> Pallet<T> {
     pub fn new() -> Self {
         Self {
