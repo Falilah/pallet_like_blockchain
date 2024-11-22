@@ -110,36 +110,29 @@ fn main() {
 
     /* Set the balance of `alice` to 100, allowing us to execute other transactions. */
     runtime.balances.set_balance(&alice, 100);
+    let call = balances::Call::Transfer { to: (bob), amount: (69) };
+    let call2 = balances::Call::Transfer { to: ("Charlie".to_string()), amount: (30) };
+    let call3 = balances::Call::Transfer { to: ("Charlie".to_string()), amount: (30) };
+    let call4 = balances::Call::Transfer { to: ("alex".to_string()), amount: (10) };
+
     let block_1 = types::Block {
         header: support::Header { block_number: 1 },
         extrinsics: vec![
             support::Extrinsic {
                 caller: alice,
-                call: RuntimeCall::BalancesTransfer {
-                    to: bob,
-                    amount: 69,
-                },
+                call: RuntimeCall::Balances(call)
             },
             support::Extrinsic {
                 caller: "Bob".to_string(),
-                call: RuntimeCall::BalancesTransfer {
-                    to: "Charlie".to_string(),
-                    amount: 30,
-                },
+                call: RuntimeCall::Balances(call2)
             },
             support::Extrinsic {
                 caller: "alex".to_string(),
-                call: RuntimeCall::BalancesTransfer {
-                    to: "Charlie".to_string(),
-                    amount: 30,
-                },
+                call: RuntimeCall::Balances(call3)
             },
             support::Extrinsic {
                 caller: "Alice".to_string(),
-                call: RuntimeCall::BalancesTransfer {
-                    to: "alex".to_string(),
-                    amount: 10,
-                },
+                call: RuntimeCall::Balances(call4)
             },
         ],
     };
