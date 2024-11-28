@@ -9,6 +9,57 @@ pub trait Config: crate::system::Config {
 	type Content: Debug + Ord;
 }
 
+
+// A public enum which describes the calls we want to expose to the dispatcher.
+// We should expect that the caller of each call will be provided by the dispatcher,
+// and not included as a parameter of the call.
+pub enum Call<T: Config> {
+	/*
+		Remember that you only need to pass in the `claim` data, as `caller` information is passed
+		in through the `dispatch` logic.
+	*/
+
+	CreateClaim {
+        content: T::Content,
+    },
+	RevokeClaim {
+        content: T::Content,
+    },
+}
+
+/// Implementation of the dispatch logic, mapping from `POECall` to the appropriate underlying
+/// function we want to execute.
+impl<T: Config> crate::support::Dispatch for Pallet<T> {
+	/*
+		Implement `crate::support::Dispatch` for `Pallet<T>`.
+
+		In your `dispatch` logic, match on `call` and forward the `caller` and `claim` data to the
+		appropriate function.
+	*/
+
+	type Caller = T::AccountId;
+    type Call = Call<T>;
+
+    fn dispatch(
+        &mut self,
+        caller: Self::Caller,
+        call: Self::Call,
+    ) -> crate::support::DispatchResult {
+        /*use a `match` statement to route the `Call` to the appropriate pallet function. */
+        match call {
+            Call::CreateClaim { content } => {
+				self.create_claim(caller, content)?
+               
+            },
+			Call::RevokeClaim {  content } =>{
+				self.revoke_claim(caller, content)?
+			}
+        }
+        Ok(())
+    }
+}
+
+
 /// This is the Proof of Existence Module.
 /// It is a simple module that allows accounts to claim existence of some data.
 #[derive(Debug)]
@@ -43,21 +94,23 @@ impl<T: Config> Pallet<T> {
 		if self.claims.contains_key(&claim) {
 			return Err(&"this content is already claimed");
 		}
-		/* TODO: `insert` the claim on behalf of `caller`. */
+		/* `insert` the claim on behalf of `caller`. */
 		self.claims.insert(claim, caller);
 		Ok(())
 	}
 
 
 	pub fn revoke_claim(&mut self, caller: T::AccountId, claim: T::Content) -> DispatchResult {
-		/* TODO: Get the owner of the `claim` to be revoked. */
-		let caller_state = self.get_claim(&claim).expect("claim does not exist");
+		/* Get the owner of the `claim` to be revoked. */
+		let caller_state = self.get_claim(&claim).ok_or("claim does not exist")?;
 	
 		
-		/* TODO: Check that the `owner` matches the `caller`. */
-		assert!(&caller == caller_state);
-		/* TODO: If all checks pass, then `remove` the `claim`. */
-		self.claims.remove_entry(&claim);
+		/* Check that the `owner` matches the `caller`. */
+		if caller != *caller_state {
+			return Err(&"this content is owned by someone else");
+		}
+		/*If all checks pass, then `remove` the `claim`. */
+		self.claims.remove(&claim);
 		Ok(())
 	}
 }
@@ -82,13 +135,6 @@ mod test {
 
 	#[test]
 	fn basic_proof_of_existence() {
-		/*
-			TODO:
-			Create an end to end test verifying the basic functionality of this pallet.
-				- Check the initial state is as you expect.
-				- Check that all functions work successfully.
-				- Check that all error conditions error as expected.
-		*/
 
 		let alice = "Alice".to_string();
 		let bob = "Bob".to_string();
@@ -114,8 +160,12 @@ mod test {
 
 		let charles = "Charles".to_string();
 
-		// let rev = poe.revoke_claim(charles, "claimBob").err();
-		// // assert_eq!(rev, Some("claim does not exist"));
+		// let rev = std::panic::catch_unwind(|| {
+		// 	poe.revoke_claim(charles, "claimBob")
+		// });
+		
+		
+		// assert_eq!(rev, Some("claim does not exist"));
 
 
 	}
