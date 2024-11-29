@@ -12,6 +12,8 @@ mod types {
     pub type Balance = u128;
     pub type BlockNumber = u32;
     pub type Nonce = u32;
+    pub type Content = &'static str;
+
     /*Define a concrete `Extrinsic` type using `AccountId` and `RuntimeCall`. */
     pub type Extrinsic = support::Extrinsic<AccountId, crate::RuntimeCall>;
     /*Define a concrete `Header` type using `BlockNumber`. */
@@ -24,6 +26,7 @@ mod types {
 // Note that it is just an accumulation of the calls exposed by each module.
 pub enum RuntimeCall {
     Balances(balances::Call<Runtime>),
+    ProofOfExistence(proof_of_existence::Call<Runtime>),
 
 }
 
@@ -31,6 +34,10 @@ impl system::Config for Runtime {
     type AccountId = types::AccountId;
     type BlockNumber = types::BlockNumber;
     type Nonce = types::Nonce;
+}
+
+impl proof_of_existence::Config for Runtime {
+    type Content = types::Content;
 }
 
 impl balances::Config for Runtime {
@@ -52,6 +59,9 @@ impl crate::support::Dispatch for Runtime {
         match runtime_call {
             RuntimeCall::Balances(call) =>{
                 self.balances.dispatch(caller, call)?;
+            },
+            RuntimeCall::ProofOfExistence(call) =>{
+                self.proof_of_existence.dispatch(caller, call)?;
             }
         }
         Ok(())
@@ -67,6 +77,7 @@ pub struct Runtime {
 
     /* create a field `balances` which is of type `balances::Pallet`. */
     balances: balances::Pallet<Self>,
+    proof_of_existence: proof_of_existence::Pallet<Self>,
 }
 
 impl Runtime {
@@ -76,6 +87,7 @@ impl Runtime {
         Self {
             system: system::Pallet::new(),
             balances: balances::Pallet::new(),
+            proof_of_existence: proof_of_existence::Pallet::new()
         }
     }
 
@@ -139,34 +151,47 @@ fn main() {
 
     runtime.execute_block(block_1).expect("invalid block");
 
-    // start emulating a block
-    /* Increment the block number in system. */
-    // runtime.system.inc_block_number();
-    // /* Assert the block number is what we expect. */
-    // assert!(runtime.system.block_number() == 1);
+    let claim1 = proof_of_existence::Call::CreateClaim { content: "hash of bob: hello! this is for bob" };
+    let claim2 = proof_of_existence::Call::CreateClaim { content: "hash of alice: hello! this is for Alice" };
+    let claim3 = proof_of_existence::Call::RevokeClaim  { content: "No hash for this claim" };
+    let claim4 = proof_of_existence::Call::CreateClaim { content: "No hash for this claim" };
+    let claim5 = proof_of_existence::Call::RevokeClaim  { content: "No hash for this claim" };
+    let claim6 = proof_of_existence::Call::CreateClaim { content: "hash of alice: hello! this is for Alice" };
 
-    // first transaction
-    // /* Increment the nonce of `alice`. */
-    // runtime.system.inc_nonce(alice);
+    let block_2 = types::Block {
+        header: support::Header { block_number: 2 },
+        extrinsics: vec![
+            support::Extrinsic {
+                caller: "Bob".to_string(),
+                call: RuntimeCall::ProofOfExistence(claim1)
+            },
 
-    // /*Execute a transfer from `alice` to `bob` for 30 tokens.
-    //     - The transfer _could_ return an error. We should use `map_err` to print
-    //       the error if there is one.
-    //     - We should capture the result of the transfer in an unused variable like `_res`.
-    // */
-    // let _res = runtime
-    //     .balances
-    //     .transfer(alice, bob, 30)
-    //     .map_err(|e| eprintln!("{}", e));
+            support::Extrinsic {
+                caller: "Alice".to_string(),
+                call: RuntimeCall::ProofOfExistence(claim2)
+            },
+            support::Extrinsic {
+                caller: "Alice".to_string(),
+                call: RuntimeCall::ProofOfExistence(claim3)
+            },
+            support::Extrinsic {
+                caller: "Alice".to_string(),
+                call: RuntimeCall::ProofOfExistence(claim4)
+            },
+             support::Extrinsic {
+                caller: "Alice".to_string(),
+                call: RuntimeCall::ProofOfExistence(claim5)
+            },
+            support::Extrinsic {
+                caller: "Bob".to_string(),
+                call: RuntimeCall::ProofOfExistence(claim6)
+            },
+        ],
+    };
 
-    // // second transaction
-    // /* Increment the nonce of `alice` again. */
-    // runtime.system.inc_nonce(alice);
-    // /* Execute another balance transfer, this time from `alice` to `charlie` for 20. */
-    // let _res = runtime
-    //     .balances
-    //     .transfer(alice, charlie, 20)
-    // .map_err(|e| eprintln!("{}", e));
+    runtime.execute_block(block_2).expect("invalid block");
+
+   
 
     println!("{:?}", runtime)
 }
