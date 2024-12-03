@@ -13,34 +13,62 @@ pub struct Pallet<T: Config> {
     balances: BTreeMap<T::AccountId, T::Balance>,
 }
 
-pub enum Call<T: Config> {
-    /* Create an enum variant `Transfer` which contains named fields:
-        - `to`: a `T::AccountId`
-        - `amount`: a `T::Balance`
-    */
-    Transfer {
+// pub enum Call<T: Config> {
+//     /* Create an enum variant `Transfer` which contains named fields:
+//         - `to`: a `T::AccountId`
+//         - `amount`: a `T::Balance`
+//     */
+//     Transfer {
+//         to: T::AccountId,
+//         amount: T::Balance,
+//     },
+// }
+
+// impl<T: Config> crate::support::Dispatch for Pallet<T> {
+//     type Caller = T::AccountId;
+//     type Call = Call<T>;
+
+//     fn dispatch(
+//         &mut self,
+//         caller: Self::Caller,
+//         call: Self::Call,
+//     ) -> crate::support::DispatchResult {
+//         /* use a `match` statement to route the `Call` to the appropriate pallet function. */
+//         match call {
+//             Call::Transfer { to, amount } => {
+//                 self.transfer(&caller, &to, amount)?;
+//             }
+//         }
+//         Ok(())
+//     }
+// }
+
+#[macros::call]
+impl<T: Config> Pallet<T>{
+
+    pub fn transfer(
+        &mut self,
+        caller: T::AccountId,
         to: T::AccountId,
         amount: T::Balance,
-    },
-}
-
-impl<T: Config> crate::support::Dispatch for Pallet<T> {
-    type Caller = T::AccountId;
-    type Call = Call<T>;
-
-    fn dispatch(
-        &mut self,
-        caller: Self::Caller,
-        call: Self::Call,
     ) -> crate::support::DispatchResult {
-        /* use a `match` statement to route the `Call` to the appropriate pallet function. */
-        match call {
-            Call::Transfer { to, amount } => {
-                self.transfer(&caller, &to, amount)?;
-            }
-        }
+        let caller_bal = self.balance(&caller);
+        let to_bal = self.balance(&to);
+
+        let new_caller_bal = caller_bal.checked_sub(&amount).ok_or("Not enough funds.")?;
+
+        let new_to_bal = to_bal
+            .checked_add(&amount)
+            .ok_or("over/underflow occured.")?;
+
+        self.set_balance(&caller, new_caller_bal);
+        self.set_balance(&to, new_to_bal);
+
         Ok(())
     }
+
+    
+
 }
 
 impl<T: Config> Pallet<T> {
@@ -58,26 +86,7 @@ impl<T: Config> Pallet<T> {
         *self.balances.get(who).unwrap_or(&T::Balance::zero())
     }
 
-    pub fn transfer(
-        &mut self,
-        caller: &T::AccountId,
-        to: &T::AccountId,
-        amount: T::Balance,
-    ) -> crate::support::DispatchResult {
-        let caller_bal = self.balance(caller);
-        let to_bal = self.balance(to);
-
-        let new_caller_bal = caller_bal.checked_sub(&amount).ok_or("Not enough funds.")?;
-
-        let new_to_bal = to_bal
-            .checked_add(&amount)
-            .ok_or("over/underflow occured.")?;
-
-        self.set_balance(caller, new_caller_bal);
-        self.set_balance(to, new_to_bal);
-
-        Ok(())
-    }
+   
 }
 
 #[cfg(test)]

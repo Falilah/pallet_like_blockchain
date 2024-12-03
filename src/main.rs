@@ -2,7 +2,6 @@ mod balances;
 mod support;
 mod system;
 mod proof_of_existence;
-use balances::Call;
 
 use crate::support::Dispatch;
 mod types {
@@ -122,10 +121,10 @@ fn main() {
 
     /* Set the balance of `alice` to 100, allowing us to execute other transactions. */
     runtime.balances.set_balance(&alice, 100);
-    let call = balances::Call::Transfer { to: (bob), amount: (69) };
-    let call2 = balances::Call::Transfer { to: ("Charlie".to_string()), amount: (30) };
-    let call3 = balances::Call::Transfer { to: ("Charlie".to_string()), amount: (30) };
-    let call4 = balances::Call::Transfer { to: ("alex".to_string()), amount: (10) };
+    let call = balances::Call::transfer { to: (bob), amount: (69) };
+    let call2 = balances::Call::transfer { to: ("Charlie".to_string()), amount: (30) };
+    let call3 = balances::Call::transfer { to: ("Charlie".to_string()), amount: (30) };
+    let call4 = balances::Call::transfer { to: ("alex".to_string()), amount: (10) };
 
     let block_1 = types::Block {
         header: support::Header { block_number: 1 },
@@ -196,6 +195,4 @@ fn main() {
     println!("{:?}", runtime)
 }
 
-// mod test {
-//     use super::*;
-// }
+
