@@ -150,12 +150,12 @@ fn main() {
 
     runtime.execute_block(block_1).expect("invalid block");
 
-    let claim1 = proof_of_existence::Call::CreateClaim { content: "hash of bob: hello! this is for bob" };
-    let claim2 = proof_of_existence::Call::CreateClaim { content: "hash of alice: hello! this is for Alice" };
-    let claim3 = proof_of_existence::Call::RevokeClaim  { content: "No hash for this claim" };
-    let claim4 = proof_of_existence::Call::CreateClaim { content: "No hash for this claim" };
-    let claim5 = proof_of_existence::Call::RevokeClaim  { content: "No hash for this claim" };
-    let claim6 = proof_of_existence::Call::CreateClaim { content: "hash of alice: hello! this is for Alice" };
+    let claim1 = proof_of_existence::Call::create_claim { claim:"hash of bob: hello! this is for bob" };
+    let claim2 = proof_of_existence::Call::create_claim { claim: "hash of alice: hello! this is for Alice" };
+    let claim3 = proof_of_existence::Call::revoke_claim  { claim: "No hash for this claim" };
+    let claim4 = proof_of_existence::Call::create_claim { claim: "No hash for this claim" };
+    let claim5 = proof_of_existence::Call::revoke_claim  { claim: "No hash for this claim" };
+    let claim6 = proof_of_existence::Call::create_claim { claim: "hash of alice: hello! this is for Alice" };
 
     let block_2 = types::Block {
         header: support::Header { block_number: 2 },

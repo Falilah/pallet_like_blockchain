@@ -13,51 +13,51 @@ pub trait Config: crate::system::Config {
 // A public enum which describes the calls we want to expose to the dispatcher.
 // We should expect that the caller of each call will be provided by the dispatcher,
 // and not included as a parameter of the call.
-pub enum Call<T: Config> {
-	/*
-		Remember that you only need to pass in the `claim` data, as `caller` information is passed
-		in through the `dispatch` logic.
-	*/
+// pub enum Call<T: Config> {
+// 	/*
+// 		Remember that you only need to pass in the `claim` data, as `caller` information is passed
+// 		in through the `dispatch` logic.
+// 	*/
 
-	CreateClaim {
-        content: T::Content,
-    },
-	RevokeClaim {
-        content: T::Content,
-    },
-}
+// 	CreateClaim {
+//         content: T::Content,
+//     },
+// 	RevokeClaim {
+//         content: T::Content,
+//     },
+// }
 
-/// Implementation of the dispatch logic, mapping from `POECall` to the appropriate underlying
-/// function we want to execute.
-impl<T: Config> crate::support::Dispatch for Pallet<T> {
-	/*
-		Implement `crate::support::Dispatch` for `Pallet<T>`.
+// /// Implementation of the dispatch logic, mapping from `POECall` to the appropriate underlying
+// /// function we want to execute.
+// impl<T: Config> crate::support::Dispatch for Pallet<T> {
+// 	/*
+// 		Implement `crate::support::Dispatch` for `Pallet<T>`.
 
-		In your `dispatch` logic, match on `call` and forward the `caller` and `claim` data to the
-		appropriate function.
-	*/
+// 		In your `dispatch` logic, match on `call` and forward the `caller` and `claim` data to the
+// 		appropriate function.
+// 	*/
 
-	type Caller = T::AccountId;
-    type Call = Call<T>;
+// 	type Caller = T::AccountId;
+//     type Call = Call<T>;
 
-    fn dispatch(
-        &mut self,
-        caller: Self::Caller,
-        call: Self::Call,
-    ) -> crate::support::DispatchResult {
-        /*use a `match` statement to route the `Call` to the appropriate pallet function. */
-        match call {
-            Call::CreateClaim { content } => {
-				self.create_claim(caller, content)?
+//     fn dispatch(
+//         &mut self,
+//         caller: Self::Caller,
+//         call: Self::Call,
+//     ) -> crate::support::DispatchResult {
+//         /*use a `match` statement to route the `Call` to the appropriate pallet function. */
+//         match call {
+//             Call::CreateClaim { content } => {
+// 				self.create_claim(caller, content)?
                
-            },
-			Call::RevokeClaim {  content } =>{
-				self.revoke_claim(caller, content)?
-			}
-        }
-        Ok(())
-    }
-}
+//             },
+// 			Call::RevokeClaim {  content } =>{
+// 				self.revoke_claim(caller, content)?
+// 			}
+//         }
+//         Ok(())
+//     }
+// }
 
 
 /// This is the Proof of Existence Module.
@@ -70,23 +70,9 @@ pub struct Pallet<T: Config> {
     claims: BTreeMap<T::Content, T::AccountId>
 }
 
+#[macros::call]
 impl<T: Config> Pallet<T> {
-	/// Create a new instance of the Proof of Existence Module.
-	pub fn new() -> Self {
-		/* Return a new instance of the `Pallet` struct. */
-        
-            Self {
-                claims: BTreeMap::<T::Content, T::AccountId>::new(),
-            }
-        
-	}
-
-	pub fn get_claim(&self, claim: &T::Content) -> Option<&T::AccountId> {
-		//`get` the `claim` */
-		
-		self.claims.get(claim)
-	}
-
+	
 	/// Create a new claim on behalf of the `caller`.
 	/// This function will return an error if someone already has claimed that content.
 	pub fn create_claim(&mut self, caller: T::AccountId, claim: T::Content) -> DispatchResult {
@@ -113,6 +99,27 @@ impl<T: Config> Pallet<T> {
 		self.claims.remove(&claim);
 		Ok(())
 	}
+}
+
+
+impl<T: Config> Pallet<T> {
+	/// Create a new instance of the Proof of Existence Module.
+	pub fn new() -> Self {
+		/* Return a new instance of the `Pallet` struct. */
+        
+            Self {
+                claims: BTreeMap::<T::Content, T::AccountId>::new(),
+            }
+        
+	}
+
+	pub fn get_claim(&self, claim: &T::Content) -> Option<&T::AccountId> {
+		//`get` the `claim` */
+		
+		self.claims.get(claim)
+	}
+
+
 }
 
 
