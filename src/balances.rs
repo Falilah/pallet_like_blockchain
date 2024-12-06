@@ -44,8 +44,7 @@ pub struct Pallet<T: Config> {
 // }
 
 #[macros::call]
-impl<T: Config> Pallet<T>{
-
+impl<T: Config> Pallet<T> {
     pub fn transfer(
         &mut self,
         caller: T::AccountId,
@@ -66,9 +65,6 @@ impl<T: Config> Pallet<T>{
 
         Ok(())
     }
-
-    
-
 }
 
 impl<T: Config> Pallet<T> {
@@ -85,8 +81,6 @@ impl<T: Config> Pallet<T> {
     pub fn balance(&self, who: &T::AccountId) -> T::Balance {
         *self.balances.get(who).unwrap_or(&T::Balance::zero())
     }
-
-   
 }
 
 #[cfg(test)]

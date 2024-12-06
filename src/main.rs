@@ -1,7 +1,7 @@
 mod balances;
+mod proof_of_existence;
 mod support;
 mod system;
-mod proof_of_existence;
 
 use crate::support::Dispatch;
 mod types {
@@ -122,78 +122,97 @@ fn main() {
 
     /* Set the balance of `alice` to 100, allowing us to execute other transactions. */
     runtime.balances.set_balance(&alice, 100);
-    let call = balances::Call::transfer { to: (bob), amount: (69) };
-    let call2 = balances::Call::transfer { to: ("Charlie".to_string()), amount: (30) };
-    let call3 = balances::Call::transfer { to: ("Charlie".to_string()), amount: (30) };
-    let call4 = balances::Call::transfer { to: ("alex".to_string()), amount: (10) };
+    let call = balances::Call::transfer {
+        to: (bob),
+        amount: (69),
+    };
+    let call2 = balances::Call::transfer {
+        to: ("Charlie".to_string()),
+        amount: (30),
+    };
+    let call3 = balances::Call::transfer {
+        to: ("Charlie".to_string()),
+        amount: (30),
+    };
+    let call4 = balances::Call::transfer {
+        to: ("alex".to_string()),
+        amount: (10),
+    };
 
     let block_1 = types::Block {
         header: support::Header { block_number: 1 },
         extrinsics: vec![
             support::Extrinsic {
                 caller: alice,
-                call: RuntimeCall::balances(call)
+                call: RuntimeCall::balances(call),
             },
             support::Extrinsic {
                 caller: "Bob".to_string(),
-                call: RuntimeCall::balances(call2)
+                call: RuntimeCall::balances(call2),
             },
             support::Extrinsic {
                 caller: "alex".to_string(),
-                call: RuntimeCall::balances(call3)
+                call: RuntimeCall::balances(call3),
             },
             support::Extrinsic {
                 caller: "Alice".to_string(),
-                call: RuntimeCall::balances(call4)
+                call: RuntimeCall::balances(call4),
             },
         ],
     };
 
     runtime.execute_block(block_1).expect("invalid block");
 
-    let claim1 = proof_of_existence::Call::create_claim { claim:"hash of bob: hello! this is for bob" };
-    let claim2 = proof_of_existence::Call::create_claim { claim: "hash of alice: hello! this is for Alice" };
-    let claim3 = proof_of_existence::Call::revoke_claim  { claim: "No hash for this claim" };
-    let claim4 = proof_of_existence::Call::create_claim { claim: "No hash for this claim" };
-    let claim5 = proof_of_existence::Call::revoke_claim  { claim: "No hash for this claim" };
-    let claim6 = proof_of_existence::Call::create_claim { claim: "hash of alice: hello! this is for Alice" };
+    let claim1 = proof_of_existence::Call::create_claim {
+        claim: "hash of bob: hello! this is for bob",
+    };
+    let claim2 = proof_of_existence::Call::create_claim {
+        claim: "hash of alice: hello! this is for Alice",
+    };
+    let claim3 = proof_of_existence::Call::revoke_claim {
+        claim: "No hash for this claim",
+    };
+    let claim4 = proof_of_existence::Call::create_claim {
+        claim: "No hash for this claim",
+    };
+    let claim5 = proof_of_existence::Call::revoke_claim {
+        claim: "No hash for this claim",
+    };
+    let claim6 = proof_of_existence::Call::create_claim {
+        claim: "hash of alice: hello! this is for Alice",
+    };
 
     let block_2 = types::Block {
         header: support::Header { block_number: 2 },
         extrinsics: vec![
             support::Extrinsic {
                 caller: "Bob".to_string(),
-                call: RuntimeCall::proof_of_existence(claim1)
-            },
-
-            support::Extrinsic {
-                caller: "Alice".to_string(),
-                call: RuntimeCall::proof_of_existence(claim2)
+                call: RuntimeCall::proof_of_existence(claim1),
             },
             support::Extrinsic {
                 caller: "Alice".to_string(),
-                call: RuntimeCall::proof_of_existence(claim3)
+                call: RuntimeCall::proof_of_existence(claim2),
             },
             support::Extrinsic {
                 caller: "Alice".to_string(),
-                call: RuntimeCall::proof_of_existence(claim4)
+                call: RuntimeCall::proof_of_existence(claim3),
             },
-             support::Extrinsic {
+            support::Extrinsic {
                 caller: "Alice".to_string(),
-                call: RuntimeCall::proof_of_existence(claim5)
+                call: RuntimeCall::proof_of_existence(claim4),
+            },
+            support::Extrinsic {
+                caller: "Alice".to_string(),
+                call: RuntimeCall::proof_of_existence(claim5),
             },
             support::Extrinsic {
                 caller: "Bob".to_string(),
-                call: RuntimeCall::proof_of_existence(claim6)
+                call: RuntimeCall::proof_of_existence(claim6),
             },
         ],
     };
 
     runtime.execute_block(block_2).expect("invalid block");
 
-   
-
     println!("{:?}", runtime)
 }
-
-
